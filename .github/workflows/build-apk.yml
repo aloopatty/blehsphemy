@@ -87,10 +87,6 @@ jobs:
           """)
           PY
 
-      - name: Add Material UI dependency
-        working-directory: studygram
-        run: flutter pub add material_ui
-
       - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
@@ -100,6 +96,10 @@ jobs:
         with:
           channel: 'stable'
           cache: true
+
+      - name: Add Material UI dependency
+        working-directory: studygram
+        run: flutter pub add material_ui
 
       - name: Generate Android platform scaffold
         working-directory: studygram
