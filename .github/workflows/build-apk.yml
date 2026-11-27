@@ -28,7 +28,7 @@ jobs:
 
           # Repair the archive's malformed literal newline between the first imports.
           feed = Path("lib/features/feed/feed_screen.dart")
-          feed.write_text(feed.read_text().replace(";\\\\nimport", ";" + chr(10) + "import"))
+          feed.write_text(feed.read_text().replace(r";\\nimport", ";" + chr(10) + "import"))
 
           # Correct the PPTX test fixture's ArchiveFile constructor.
           test = Path("test/parser_test.dart")
