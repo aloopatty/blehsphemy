@@ -2,7 +2,6 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'core/storage/study_store.dart';
-import 'core/theme/app_theme.dart';
 import 'features/app/studygram_app.dart';
 
 Future<void> main() async {
