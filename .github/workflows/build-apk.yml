@@ -78,6 +78,7 @@ jobs:
           story.write_text(story.read_text().replace("_Insight", "StoryInsight"))
           # Replace flutter create's placeholder test with an app smoke test.
           Path("test/widget_test.dart").write_text("""import 'dart:io';
+          import 'package:flutter/widgets.dart';
           import 'package:flutter_test/flutter_test.dart';
           import 'package:hive/hive.dart';
           import 'package:studygram/core/storage/study_store.dart';
