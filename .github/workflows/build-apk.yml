@@ -58,6 +58,28 @@ jobs:
           main = Path("studygram/lib/main.dart")
           main_source = main.read_text().replace("import 'core/theme/app_theme.dart';" + chr(10), "")
           main.write_text(main_source)
+
+          # Fix remaining deprecated Flutter color APIs in the source archive.
+          theme = Path("studygram/lib/core/theme/app_theme.dart")
+          theme_source = theme.read_text().replace("      background: background,", "      surface: background,")
+          theme.write_text(theme_source)
+
+          switcher = Path("studygram/lib/features/accounts/account_switcher.dart")
+          switcher_source = switcher.read_text().replace(
+              "Colors.primaries[ref.read(subjectsProvider).length%Colors.primaries.length].value",
+              "Colors.primaries[ref.read(subjectsProvider).length%Colors.primaries.length].toARGB32()",
+          )
+          switcher.write_text(switcher_source)
+
+          # Search for and fail if deprecated Color APIs remain in lib/test.
+          deprecated = []
+          for root in (Path("studygram/lib"), Path("studygram/test")):
+              for path in root.rglob("*.dart"):
+                  text = path.read_text()
+                  if "withOpacity(" in text or "Color.value" in text or re.search(r"\\.value\\b", text):
+                      deprecated.append(str(path))
+          if deprecated:
+              raise SystemExit("Deprecated color APIs found: " + ", ".join(deprecated))
           PY
       - name: Set up Java 17
         uses: actions/setup-java@v4
