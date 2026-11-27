@@ -26,29 +26,24 @@ jobs:
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          import re
 
+          slash = chr(92)
           feed = Path("studygram/lib/features/feed/feed_screen.dart")
           source = feed.read_text()
-          source = source.replace(
-              "import 'dart:async';\\\\nimport 'package:flutter/material.dart';",
-              "import 'dart:async';\\nimport 'package:flutter/material.dart';",
-              1,
-          )
+          source = source.replace(";" + slash + "nimport", ";" + chr(10) + "import", 1)
           feed.write_text(source)
 
           test = Path("studygram/test/parser_test.dart")
-          source = test.read_text().replace(r"\\\\n", r"\\n")
-          line_pattern = re.compile(r"^\\s*archive\\.addFile\\(ArchiveFile\\('ppt/slides/slide1\\.xml', utf8\\.encode\\((.*)\\)\\)\\);$", re.M)
-          match = line_pattern.search(source)
-          if match:
-              source = line_pattern.sub(
-                  "      final xmlBytes = utf8.encode(" + match.group(1) + ");\\n"
-                  "      archive.addFile(ArchiveFile('ppt/slides/slide1.xml', xmlBytes.length, xmlBytes));",
-                  source,
-                  count=1,
-              )
-          test.write_text(source)
+          source = test.read_text().replace(slash + slash + "n", slash + "n")
+          lines = source.splitlines()
+          for index, line in enumerate(lines):
+              if "archive.addFile(ArchiveFile('ppt/slides/slide1.xml'" in line:
+                  prefix = "utf8.encode("
+                  expression = line[line.index(prefix) + len(prefix):-4]
+                  lines[index] = "      final xmlBytes = utf8.encode(" + expression + ");"
+                  lines.insert(index + 1, "      archive.addFile(ArchiveFile('ppt/slides/slide1.xml', xmlBytes.length, xmlBytes));")
+                  break
+          test.write_text("\n".join(lines) + "\n")
           PY
       - name: Set up Java 17
         uses: actions/setup-java@v4
