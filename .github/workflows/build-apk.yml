@@ -69,6 +69,12 @@ jobs:
         with:
           channel: stable
           cache: true
+      - name: Migrate Material imports for Flutter 3.50+
+        working-directory: studygram
+        run: |
+          flutter pub add material_ui
+          dart fix --apply --code=migrate_design_widgets
+          dart fix --apply
       - name: Flutter dependencies
         working-directory: studygram
         run: flutter pub get
