@@ -8,180 +8,26 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  group: studygram-build-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
-
-      - name: Verify source archive
-        run: test -s studygram-source.zip
-
-      - name: Extract source
-        run: unzip -q studygram-source.zip
-
-      - name: Apply source fixes and compatibility imports
-        working-directory: studygram
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-
-          # Repair the archive's malformed literal newline between the first imports.
-          feed = Path("lib/features/feed/feed_screen.dart")
-          feed.write_text(feed.read_text().replace(chr(92) + "n", chr(10)))
-
-          # Correct the PPTX test fixture's ArchiveFile constructor.
-          test = Path("test/parser_test.dart")
-          test_source = test.read_text().replace(chr(92) * 2 + "n", chr(92) + "n")
-          lines = test_source.splitlines()
-          for i, line in enumerate(lines):
-              if "archive.addFile(ArchiveFile('ppt/slides/slide1.xml'" in line:
-                  xml = "<p:sld xmlns:p='http://schemas.openxmlformats.org/presentationml/2006/main' xmlns:a='http://schemas.openxmlformats.org/drawingml/2006/main'><a:t>Slide title</a:t><a:t>Bullet point</a:t></p:sld>"
-                  lines[i:i+1] = [
-                      '      final xmlBytes = utf8.encode("' + xml + '");',
-                      "      archive.addFile(ArchiveFile('ppt/slides/slide1.xml', xmlBytes.length, xmlBytes));",
-                  ]
-                  break
-          else:
-              raise SystemExit("PPTX test fixture pattern was not found")
-          test.write_text(chr(10).join(lines) + chr(10))
-
-          # Remove deprecated duplicate ColorScheme.background while retaining surface.
-          theme = Path("lib/core/theme/app_theme.dart")
-          theme.write_text(theme.read_text().replace("      background: background," + chr(10), ""))
-
-          switcher = Path("lib/features/accounts/account_switcher.dart")
-          switcher.write_text(switcher.read_text().replace(".length].value);", ".length].toARGB32());"))
-
-          profile = Path("lib/features/profile/profile_screen.dart")
-          profile.write_text(profile.read_text().replace("import '../feed/models.dart';" + chr(10), "").replace("import '../feed/feed_screen.dart';" + chr(10), ""))
-          main = Path("lib/main.dart")
-          main.write_text(main.read_text().replace("import 'core/theme/app_theme.dart';" + chr(10), ""))
-
-          # Flutter 3.50+ moved Material widgets to the standalone package.
-          for root in (Path("lib"), Path("test")):
-              for dart_file in root.rglob("*.dart"):
-                  text = dart_file.read_text().replace("package:flutter/material.dart", "package:material_ui/material_ui.dart")
-                  dart_file.write_text(text)
-
-          # Resolve all remaining analyzer infos without suppressing lints.
-          glass = Path("lib/core/widgets/glass.dart")
-          glass.write_text(glass.read_text().replace("Positioned.fill(child: DecoratedBox(decoration: const BoxDecoration(color: Color(0xFF080B14))))", "const Positioned.fill(child: DecoratedBox(decoration: BoxDecoration(color: Color(0xFF080B14))))"))
-          feed = Path("lib/features/feed/feed_screen.dart")
-          feed.write_text(feed.read_text().replace("if (posts.isEmpty) SliverToBoxAdapter(", "if (posts.isEmpty) const SliverToBoxAdapter(").replace("padding: const EdgeInsets.all(24), child: const Text", "padding: EdgeInsets.all(24), child: Text"))
-          story = Path("lib/features/stories/story_viewer.dart")
-          story.write_text(story.read_text().replace("_Insight", "StoryInsight"))
-          # Make the root widget injectable for a lightweight, deterministic smoke test.
-          app = Path("lib/features/app/studygram_app.dart")
-          app_source = app.read_text()
-          app_source = app_source.replace(
-              "const StudyGramApp({super.key});",
-              "const StudyGramApp({super.key, this.home});" + chr(10) + "  final Widget? home;",
-          )
-          app_source = app_source.replace("home:const MainShell()", "home:home??const MainShell()")
-          app.write_text(app_source)
-
-          # Replace flutter create's placeholder test with an app smoke test.
-          Path("test/widget_test.dart").write_text("""import 'package:flutter_test/flutter_test.dart';
-          import 'package:flutter_riverpod/flutter_riverpod.dart';
-          import 'package:material_ui/material_ui.dart';
-          import 'package:studygram/features/app/studygram_app.dart';
-
-          void main() {
-            testWidgets('StudyGram root renders without exceptions', (tester) async {
-              await tester.pumpWidget(const ProviderScope(
-                child: StudyGramApp(home: Scaffold(body: Text('StudyGram smoke test'))),
-              ));
-              expect(find.byType(MaterialApp), findsOneWidget);
-              expect(find.text('StudyGram smoke test'), findsOneWidget);
-            });
-          }
-          """)
-          PY
-
       - uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
+          distribution: temurin
           java-version: '17'
-
       - uses: subosito/flutter-action@v2
         with:
-          channel: 'stable'
+          channel: stable
           cache: true
-
-      - name: Add Material UI dependency
-        working-directory: studygram
-        run: flutter pub add material_ui
-
-      - name: Generate Android platform scaffold
-        working-directory: studygram
-        run: flutter create --platforms=android --project-name studygram --no-pub .
-
-      - name: Flutter dependencies
-        working-directory: studygram
-        run: flutter pub get
-
-      - name: Configure Android API 36
-        working-directory: studygram
-        run: |
-          sdkmanager "platforms;android-36"
-          python3 - <<'PY'
-          from pathlib import Path
-          import re
-
-          # The Flutter scaffold may use Groovy or Kotlin Gradle files.
-          candidates = [Path("android/app/build.gradle"), Path("android/app/build.gradle.kts")]
-          app = next((p for p in candidates if p.exists()), None)
-          if app is None:
-              raise SystemExit("Android app Gradle file not found")
-          text = app.read_text()
-          text, count = re.subn(r"(compileSdk(?:Version)?\s*(?:=\s*)?)(?:flutter\.compileSdkVersion|\d+)", r"\g<1>36", text, count=1)
-          if count == 0:
-              raise SystemExit(f"Could not update compileSdk in {app}")
-          app.write_text(text)
-
-          # Plugins declare their own compile SDK. Patch only Android plugin
-          # build files in the resolved Pub cache, rather than assuming the
-          # root Gradle file's format/location.
-          pub_cache = Path.home() / ".pub-cache" / "hosted" / "pub.dev"
-          changed = 0
-          for gradle in pub_cache.glob("*/android/build.gradle*"):
-              source = gradle.read_text()
-              updated, n = re.subn(
-                  r"(compileSdk(?:Version)?\s*(?:=\s*)?)(?:flutter\.compileSdkVersion|\d+)",
-                  r"\g<1>36",
-                  source,
-              )
-              if n:
-                  gradle.write_text(updated)
-                  changed += 1
-          print(f"Updated compileSdk=36 in {changed} cached plugin Gradle files")
-          PY
-
-      - name: Analyze
-        working-directory: studygram
-        run: flutter analyze
-
-      - name: Test
-        working-directory: studygram
-        run: |
-          timeout 60s flutter test test/countdown_test.dart --reporter expanded
-          timeout 60s flutter test test/parser_test.dart --reporter expanded
-          timeout 60s flutter test test/widget_test.dart --reporter expanded
-
-      - name: Build release APK
-        working-directory: studygram
-        run: flutter build apk --release
-
-      - name: Upload release APK
-        uses: actions/upload-artifact@v4
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test
+      - run: flutter build apk --release
+      - uses: actions/upload-artifact@v4
         with:
           name: studygram-release-apk
-          path: studygram/build/app/outputs/flutter-apk/app-release.apk
+          path: build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error
-          retention-days: 30
