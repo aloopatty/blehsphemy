@@ -25,7 +25,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
   ])));
  }
  Widget _heading(BuildContext context)=>Padding(padding:const EdgeInsets.all(18),child:Text('Explore',style:Theme.of(context).textTheme.headlineMedium));
- Widget _searchBox()=>Padding(padding:const EdgeInsets.symmetric(horizontal:14),child:Glass(radius:15,padding:const EdgeInsets.symmetric(horizontal:10),child:TextField(controller:search,onChanged:(value)=>setState((){}),decoration:const InputDecoration(border:InputBorder.none,prefixIcon:Icon(Icons.search),hintText:'Search notes, slides and concepts')));
+ Widget _searchBox()=>Padding(padding:const EdgeInsets.symmetric(horizontal:14),child:Glass(radius:15,padding:const EdgeInsets.symmetric(horizontal:10),child:TextField(controller:search,onChanged:(value)=>setState((){}),decoration:const InputDecoration(border:InputBorder.none,prefixIcon:Icon(Icons.search),hintText:'Search notes, slides and concepts'))));
  Widget _resultCount(int count)=>Padding(padding:const EdgeInsets.all(16),child:Text(count.toString()+' posts',style:const TextStyle(color:Colors.white54)));
  Widget _tile(BuildContext context,StudyPost post){
   final subjects=ref.watch(subjectsProvider);
