@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/widgets/glass.dart';
 import '../../core/storage/study_store.dart';
 import '../app/studygram_app.dart';
+import '../feed/feed_screen.dart';
 import '../accounts/account_switcher.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {const ProfileScreen({super.key});@override ConsumerState<ProfileScreen> createState()=>_ProfileScreenState();}
