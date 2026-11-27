@@ -17,7 +17,6 @@ jobs:
         run: |
           if [ ! -f studygram-source.zip ]; then
             echo "::error::Missing studygram-source.zip. Upload the source archive to the repository root first."
-            echo "Repository currently contains workflow configuration only."
             exit 1
           fi
       - name: Extract source archive
@@ -26,24 +25,39 @@ jobs:
         run: |
           python3 - <<'PY'
           from pathlib import Path
+          import re
 
-          slash = chr(92)
           feed = Path("studygram/lib/features/feed/feed_screen.dart")
           source = feed.read_text()
-          source = source.replace(";" + slash + "nimport", ";" + chr(10) + "import", 1)
+          # The archive accidentally contains a literal backslash-n between imports.
+          source = re.sub(r";\\+nimport", ";\\nimport", source, count=1)
           feed.write_text(source)
 
           test = Path("studygram/test/parser_test.dart")
-          source = test.read_text().replace(slash + slash + "n", slash + "n")
+          source = test.read_text()
+          # Convert double-escaped Dart newline sequences to normal Dart escapes.
+          source = source.replace("\\\\n", "\\n")
           lines = source.splitlines()
           for index, line in enumerate(lines):
               if "archive.addFile(ArchiveFile('ppt/slides/slide1.xml'" in line:
-                  prefix = "utf8.encode("
-                  expression = line[line.index(prefix) + len(prefix):-4]
-                  lines[index] = "      final xmlBytes = utf8.encode(" + expression + ");"
+                  xml = '<p:sld xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:t>Slide title</a:t><a:t>Bullet point</a:t></p:sld>'
+                  lines[index] = "      final xmlBytes = utf8.encode('" + xml + "');"
                   lines.insert(index + 1, "      archive.addFile(ArchiveFile('ppt/slides/slide1.xml', xmlBytes.length, xmlBytes));")
                   break
-          test.write_text("\n".join(lines) + "\n")
+          else:
+              raise SystemExit("Expected PPTX ArchiveFile test fixture was not found.")
+          test.write_text("\\n".join(lines) + "\\n")
+
+          # Remove imports that are unused in the supplied archive.
+          profile = Path("studygram/lib/features/profile/profile_screen.dart")
+          profile_source = profile.read_text()
+          profile_source = profile_source.replace("import '../feed/models.dart';\\n", "")
+          profile_source = profile_source.replace("import '../feed/feed_screen.dart';\\n", "")
+          profile.write_text(profile_source)
+
+          main = Path("studygram/lib/main.dart")
+          main_source = main.read_text().replace("import 'core/theme/app_theme.dart';\\n", "")
+          main.write_text(main_source)
           PY
       - name: Set up Java 17
         uses: actions/setup-java@v4
