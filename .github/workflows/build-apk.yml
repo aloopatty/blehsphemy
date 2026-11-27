@@ -63,6 +63,13 @@ jobs:
                   text = dart_file.read_text().replace("package:flutter/material.dart", "package:material_ui/material_ui.dart")
                   dart_file.write_text(text)
 
+          # Resolve all remaining analyzer infos without suppressing lints.
+          glass = Path("lib/core/widgets/glass.dart")
+          glass.write_text(glass.read_text().replace("Positioned.fill(child: DecoratedBox(", "const Positioned.fill(child: DecoratedBox("))
+          feed = Path("lib/features/feed/feed_screen.dart")
+          feed.write_text(feed.read_text().replace("if (posts.isEmpty) SliverToBoxAdapter(", "if (posts.isEmpty) const SliverToBoxAdapter("))
+          story = Path("lib/features/stories/story_viewer.dart")
+          story.write_text(story.read_text().replace("_Insight", "StoryInsight"))
           # Replace flutter create's placeholder test with an app smoke test.
           Path("test/widget_test.dart").write_text("""import 'dart:io';
           import 'package:flutter_test/flutter_test.dart';
