@@ -20,6 +20,48 @@ jobs:
       - name: Extract source
         run: unzip -q studygram-source.zip
 
+      - name: Apply known source corrections
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          def patch(path, transform, expected):
+              p = Path(path)
+              source = p.read_text()
+              updated = transform(source)
+              if updated == source and not expected(source):
+                  raise SystemExit(f"Expected correction pattern missing in {path}")
+              p.write_text(updated)
+
+          feed = Path("studygram/lib/features/feed/feed_screen.dart")
+          s = feed.read_text()
+          s = re.sub(r";\\\\nimport", ";" + chr(10) + "import", s)
+          feed.write_text(s)
+
+          test = Path("studygram/test/parser_test.dart")
+          s = test.read_text().replace("\\\\n", "\\n")
+          s = s.replace("archive.addFile(ArchiveFile('ppt/slides/slide1.xml', xmlBytes));", "archive.addFile(ArchiveFile('ppt/slides/slide1.xml', xmlBytes.length, xmlBytes));")
+          test.write_text(s)
+
+          theme = Path("studygram/lib/core/theme/app_theme.dart")
+          s = theme.read_text()
+          s = s.replace("      background: background,\\n", "")
+          theme.write_text(s)
+
+          switcher = Path("studygram/lib/features/accounts/account_switcher.dart")
+          s = switcher.read_text().replace(".length].value);", ".length].toARGB32());")
+          switcher.write_text(s)
+
+          profile = Path("studygram/lib/features/profile/profile_screen.dart")
+          s = profile.read_text().replace("import '../feed/models.dart';\\n", "").replace("import '../feed/feed_screen.dart';\\n", "")
+          profile.write_text(s)
+
+          main = Path("studygram/lib/main.dart")
+          s = main.read_text().replace("import 'core/theme/app_theme.dart';\\n", "")
+          main.write_text(s)
+          PY
+
       - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
