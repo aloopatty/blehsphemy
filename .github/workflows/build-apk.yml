@@ -80,8 +80,8 @@ jobs:
           app = Path("lib/features/app/studygram_app.dart")
           app_source = app.read_text()
           app_source = app_source.replace(
-              "class StudyGramApp extends ConsumerWidget {\\n  const StudyGramApp({super.key});",
-              "class StudyGramApp extends ConsumerWidget {\\n  const StudyGramApp({super.key, this.home});\\n  final Widget? home;",
+              "const StudyGramApp({super.key});",
+              "const StudyGramApp({super.key, this.home});" + chr(10) + "  final Widget? home;",
           )
           app_source = app_source.replace("home:const MainShell()", "home:home??const MainShell()")
           app.write_text(app_source)
