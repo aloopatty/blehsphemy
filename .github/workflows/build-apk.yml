@@ -95,8 +95,6 @@ jobs:
               await tester.pump();
               expect(find.byType(StudyGramApp), findsOneWidget);
               await tester.pumpWidget(const SizedBox.shrink());
-              await Hive.close();
-              await dir.delete(recursive: true);
             });
           }
           """)
