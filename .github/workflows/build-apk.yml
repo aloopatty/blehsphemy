@@ -65,7 +65,7 @@ jobs:
 
           # Resolve all remaining analyzer infos without suppressing lints.
           glass = Path("lib/core/widgets/glass.dart")
-          glass.write_text(glass.read_text().replace("Positioned.fill(child: DecoratedBox(", "const Positioned.fill(child: DecoratedBox("))
+          glass.write_text(glass.read_text().replace("Positioned.fill(child: DecoratedBox(decoration: const BoxDecoration(color: Color(0xFF080B14))))", "const Positioned.fill(child: DecoratedBox(decoration: BoxDecoration(color: Color(0xFF080B14))))"))
           feed = Path("lib/features/feed/feed_screen.dart")
           feed.write_text(feed.read_text().replace("if (posts.isEmpty) SliverToBoxAdapter(", "if (posts.isEmpty) const SliverToBoxAdapter("))
           story = Path("lib/features/stories/story_viewer.dart")
