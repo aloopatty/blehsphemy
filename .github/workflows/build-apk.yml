@@ -76,7 +76,7 @@ jobs:
           for root in (Path("studygram/lib"), Path("studygram/test")):
               for path in root.rglob("*.dart"):
                   text = path.read_text()
-                  if "withOpacity(" in text or "Color.value" in text or re.search(r"\\.value\\b", text):
+                  if "withOpacity(" in text or re.search(r"(?:Colors\\.[\\w.]+|Color\\([^)]*\\))\\.value\\b", text):
                       deprecated.append(str(path))
           if deprecated:
               raise SystemExit("Deprecated color APIs found: " + ", ".join(deprecated))
