@@ -72,7 +72,7 @@ jobs:
           glass = Path("lib/core/widgets/glass.dart")
           glass.write_text(glass.read_text().replace("Positioned.fill(child: DecoratedBox(decoration: const BoxDecoration(color: Color(0xFF080B14))))", "const Positioned.fill(child: DecoratedBox(decoration: BoxDecoration(color: Color(0xFF080B14))))"))
           feed = Path("lib/features/feed/feed_screen.dart")
-          feed.write_text(feed.read_text().replace("if (posts.isEmpty) SliverToBoxAdapter(", "if (posts.isEmpty) const SliverToBoxAdapter("))
+          feed.write_text(feed.read_text().replace("if (posts.isEmpty) SliverToBoxAdapter(", "if (posts.isEmpty) const SliverToBoxAdapter(").replace("padding: const EdgeInsets.all(24), child: const Text", "padding: EdgeInsets.all(24), child: Text"))
           story = Path("lib/features/stories/story_viewer.dart")
           story.write_text(story.read_text().replace("_Insight", "StoryInsight"))
           # Replace flutter create's placeholder test with an app smoke test.
