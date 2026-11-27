@@ -7,7 +7,7 @@ import 'package:syncfusion_flutter_pdf/pdf.dart';
 void main() {
   group('StudyParser', () {
     test('splits text/Markdown into sections and strips heading markers', () {
-      final doc = StudyParser.parseText('# Thermodynamics\\n\\nHeat is energy transfer.\\n\\n## Entropy\\n\\nA state function.', 'notes.md');
+      final doc = StudyParser.parseText('# Thermodynamics\n\nHeat is energy transfer.\n\n## Entropy\n\nA state function.', 'notes.md');
       expect(doc.sections.length, greaterThanOrEqualTo(2));
       expect(doc.sections.first, contains('Thermodynamics'));
       expect(doc.sections.last, contains('Entropy'));
@@ -19,7 +19,8 @@ void main() {
 
     test('extracts slide text from a minimal PPTX archive', () {
       final archive = Archive();
-      archive.addFile(ArchiveFile('ppt/slides/slide1.xml', utf8.encode('<p:sld xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:t>Slide title</a:t><a:t>Bullet point</a:t></p:sld>')));
+      final xmlBytes = utf8.encode('<p:sld xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:t>Slide title</a:t><a:t>Bullet point</a:t></p:sld>');
+      archive.addFile(ArchiveFile('ppt/slides/slide1.xml', xmlBytes.length, xmlBytes));
       final bytes = ZipEncoder().encode(archive)!;
       final parsed = StudyParser.parsePptx(bytes, 'lecture.pptx');
       expect(parsed.sections.single, contains('Slide title'));
