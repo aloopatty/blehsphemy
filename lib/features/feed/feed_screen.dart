@@ -146,12 +146,24 @@ class _PostCardState extends State<PostCard> {
   }
   Widget _actions(BuildContext context) {
     final post = widget.post;
+    final dots = List<Widget>.generate(post.cards.length, (i) {
+      return AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        margin: const EdgeInsets.symmetric(horizontal: 2),
+        width: i == page ? 7 : 4,
+        height: 4,
+        decoration: BoxDecoration(
+          color: i == page ? widget.tint : Colors.white24,
+          borderRadius: BorderRadius.circular(4),
+        ),
+      );
+    });
     return Row(children: [
       IconButton(onPressed: () async { await StudyStore.toggleLiked(post); widget.onChanged(); }, icon: Icon(post.liked ? Icons.favorite : Icons.favorite_border, color: post.liked ? const Color(0xFFE1306C) : null)),
       IconButton(onPressed: () => _review(context, post, widget.tint), icon: const Icon(Icons.style_outlined)),
-      IconButton(onPressed: () async { await Clipboard.setData(ClipboardData(text: post.cards.join('\n\n'))); if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Copied study notes'))); }, icon: const Icon(Icons.send_outlined)),
+      IconButton(onPressed: () async { await Clipboard.setData(ClipboardData(text: post.cards.join('\\n\\n'))); if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Copied study notes'))); }, icon: const Icon(Icons.send_outlined)),
       const Spacer(),
-      Row(children: List<Widget>.generate(post.cards.length, (i) { return AnimatedContainer(duration: const Duration(milliseconds: 180), margin: const EdgeInsets.symmetric(horizontal: 2), width: i == page ? 7 : 4, height: 4, decoration: BoxDecoration(color: i == page ? widget.tint : Colors.white24, borderRadius: BorderRadius.circular(4)); })),
+      Row(children: dots),
       IconButton(onPressed: () async { await StudyStore.toggleSaved(post); widget.onChanged(); }, icon: Icon(post.saved ? Icons.bookmark : Icons.bookmark_border, color: post.saved ? widget.tint : null)),
     ]);
   }
