@@ -12,7 +12,7 @@ class AppTheme {
     scaffoldBackgroundColor: background,
     colorScheme: const ColorScheme.dark(
       primary: violet, secondary: cyan, surface: surface,
-      background: background,
+
     ),
     useMaterial3: true,
     textTheme: const TextTheme(
