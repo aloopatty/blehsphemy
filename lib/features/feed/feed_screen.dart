@@ -141,7 +141,7 @@ class _PostCardState extends State<PostCard> {
       Text('PAGE ' + (index + 1).toString().padLeft(2, '0') + ' · NOTES', style: TextStyle(color: widget.tint, fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 1.1)),
       const SizedBox(height: 14), Text(title, maxLines: 3, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800, height: 1.2)),
       const SizedBox(height: 10), Expanded(child: SingleChildScrollView(child: SelectableText(body.isEmpty ? text : body, style: TextStyle(fontSize: 14, height: 1.45, color: Colors.white.withValues(alpha: .88))))),
-      if (text.length > 450) Align(alignment: Alignment.bottomRight, child: Glass(radius: 10, padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), child: const Text('Tap to read full page', style: TextStyle(fontSize: 9))),
+      if (text.length > 450) Align(alignment: Alignment.bottomRight, child: Glass(radius: 10, padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), child: const Text('Tap to read full page', style: TextStyle(fontSize: 9)))),
     ]));
   }
   Widget _actions(BuildContext context) {
@@ -151,15 +151,23 @@ class _PostCardState extends State<PostCard> {
       IconButton(onPressed: () => _review(context, post, widget.tint), icon: const Icon(Icons.style_outlined)),
       IconButton(onPressed: () async { await Clipboard.setData(ClipboardData(text: post.cards.join('\n\n'))); if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Copied study notes'))); }, icon: const Icon(Icons.send_outlined)),
       const Spacer(),
-      Row(children: List.generate(post.cards.length, (i) => AnimatedContainer(duration: const Duration(milliseconds: 180), margin: const EdgeInsets.symmetric(horizontal: 2), width: i == page ? 7 : 4, height: 4, decoration: BoxDecoration(color: i == page ? widget.tint : Colors.white24, borderRadius: BorderRadius.circular(4)))),
+      Row(children: List.generate(post.cards.length, (i) => AnimatedContainer(duration: const Duration(milliseconds: 180), margin: const EdgeInsets.symmetric(horizontal: 2), width: i == page ? 7 : 4, height: 4, decoration: BoxDecoration(color: i == page ? widget.tint : Colors.white24, borderRadius: BorderRadius.circular(4))))),
       IconButton(onPressed: () async { await StudyStore.toggleSaved(post); widget.onChanged(); }, icon: Icon(post.saved ? Icons.bookmark : Icons.bookmark_border, color: post.saved ? widget.tint : null)),
     ]);
   }
   Future<void> _like() async { HapticFeedback.mediumImpact(); await StudyStore.toggleLiked(widget.post); await StudyStore.toggleMastered(widget.post); setState(() => heartBurst = true); Future.delayed(const Duration(milliseconds: 600), () { if (mounted) setState(() => heartBurst = false); }); widget.onChanged(); }
   String _ago(DateTime d) { final m = DateTime.now().difference(d).inMinutes; if (m < 1) return 'now'; if (m < 60) return m.toString() + 'm'; if (m < 1440) return (m ~/ 60).toString() + 'h'; return (m ~/ 1440).toString() + 'd'; }
 }
-Future<void> _review(BuildContext context, StudyPost post, Color tint) => showModalBottomSheet<void>(context: context, backgroundColor: Colors.transparent, builder: (ctx) => Glass(radius: 24, padding: const EdgeInsets.all(18), child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-  const Text('Quick review', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)), const SizedBox(height: 10),
-  ...post.cards.take(4).map((card) => Padding(padding: const EdgeInsets.only(bottom: 8), child: Text('• ' + card.replaceAll(RegExp(r'\s+'), ' ').substring(0, min(130, card.length)))),
-  FilledButton(onPressed: () => showPostDetail(context, post, tint), child: const Text('Open full notes')),
-])));
+Future<void> _review(BuildContext context,StudyPost post,Color tint) async {
+  await showModalBottomSheet<void>(context:context,backgroundColor:Colors.transparent,builder:(context){
+    return Glass(radius:24,padding:const EdgeInsets.all(18),child:Column(mainAxisSize:MainAxisSize.min,crossAxisAlignment:CrossAxisAlignment.start,children:[
+      const Text('Quick review',style:TextStyle(fontSize:20,fontWeight:FontWeight.bold)),
+      const SizedBox(height:10),
+      ...post.cards.take(4).map((card){
+        final summary=card.replaceAll(RegExp(r'\\s+'),' ');
+        return Padding(padding:const EdgeInsets.only(bottom:8),child:Text('• '+summary.substring(0,min(130,summary.length))));
+      }),
+      FilledButton(onPressed:()=>showPostDetail(context,post,tint),child:const Text('Open full notes')),
+    ]));
+  });
+}
