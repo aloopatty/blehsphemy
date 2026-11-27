@@ -1,5 +1,5 @@
 import 'dart:ui';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class Glass extends StatelessWidget {
   const Glass({super.key, required this.child, this.padding, this.radius = 22, this.opacity = .075, this.border = true});
