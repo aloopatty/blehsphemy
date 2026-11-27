@@ -1,17 +1,20 @@
 # StudyGram
 
-StudyGram Flutter project scaffold is currently packaged separately.
+StudyGram is an offline-first Flutter study feed with subject accounts, study cards, file import, stories, and progress tracking.
 
-## Source package
-Download the source ZIP from the ChatGPT conversation attachment named **studygram-source.zip**, then upload it to this repository's root.
+## Development
 
-The expected repository layout after upload:
+Requires Flutter stable and Android SDK (API 36), Java 17.
+
+```sh
+flutter pub get
+flutter analyze
+flutter test
+flutter build apk --release
 ```
-studygram-source.zip
-.github/workflows/build-apk.yml
-```
 
-GitHub Actions will extract the archive, run `flutter pub get`, `flutter analyze`, `flutter test`, and build a release APK.
+The release APK is produced at `build/app/outputs/flutter-apk/app-release.apk`.
 
-## Build status
-The current workflow cannot build until the source archive is committed. The source archive is not yet present in this repository.
+## CI
+
+GitHub Actions runs dependency resolution, static analysis, tests, and a release APK build on pushes to `main` and manual dispatches. Successful builds upload the `studygram-release-apk` artifact.
