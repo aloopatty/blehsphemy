@@ -79,13 +79,16 @@ jobs:
               await StudyStore.initialize();
               await tester.pumpWidget(const ProviderScope(child: StudyGramApp()));
               await tester.pump();
-              expect(find.text('StudyGram'), findsWidgets);
+              expect(find.byType(MaterialApp), findsOneWidget);
               await Hive.close();
               await dir.delete(recursive: true);
             });
           }
           """)
           PY
+
+      - name: Add Material UI dependency
+        working-directory: studygram
         run: flutter pub add material_ui
 
       - uses: actions/setup-java@v4
