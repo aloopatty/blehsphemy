@@ -122,6 +122,22 @@ jobs:
         working-directory: studygram
         run: flutter create --platforms=android --project-name studygram --no-pub .
 
+      - name: Set Android compile SDK for plugin compatibility
+        working-directory: studygram
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          p = Path("android/app/build.gradle")
+          if not p.exists():
+              p = Path("android/app/build.gradle.kts")
+          s = p.read_text()
+          s, n = re.subn(r"compileSdk(?:Version)?\\s*(?:=\\s*)?(?:flutter\\.compileSdkVersion|\\d+)", "compileSdk = 36", s, count=1)
+          if n == 0:
+              raise SystemExit("Could not locate app compileSdk declaration")
+          p.write_text(s)
+          PY
+
       - name: Flutter dependencies
         working-directory: studygram
         run: flutter pub get
