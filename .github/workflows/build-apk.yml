@@ -133,7 +133,7 @@ jobs:
           if not app.exists():
               app = Path("android/app/build.gradle.kts")
           source = app.read_text()
-          source, count = re.subn(r"compileSdk(?:Version)?\\s*(?:=\\s*)?(?:flutter\\.compileSdkVersion|\\d+)", "compileSdk = 36", source, count=1)
+          source, count = re.subn(r"compileSdk(?:Version)?\s*(?:=\s*)?(?:flutter\.compileSdkVersion|\d+)", "compileSdk = 36", source, count=1)
           if not count:
               raise SystemExit(f"Unable to set app compileSdk=36 in {app}")
           app.write_text(source)
@@ -142,7 +142,7 @@ jobs:
           root_source = root.read_text()
           marker = "// CI: require Android API 36 for all Android subprojects"
           if marker not in root_source:
-              root_source += "\\n" + marker + "\\nsubprojects {\\n    afterEvaluate { project ->\\n        if (project.extensions.findByName('android') != null) {\\n            project.android.compileSdkVersion 36\\n        }\\n    }\\n}\\n"
+              root_source += "\n" + marker + "\nsubprojects {\n    afterEvaluate { project ->\n        if (project.extensions.findByName('android') != null) {\n            project.android.compileSdkVersion 36\n        }\n    }\n}\n"
           root.write_text(root_source)
           print("App and Android subprojects configured for compileSdk 36")
           PY
