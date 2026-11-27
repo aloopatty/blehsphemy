@@ -13,6 +13,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Verify source archive
+        run: |
+          if [ ! -f studygram-source.zip ]; then
+            echo "::error::Missing studygram-source.zip. Upload the source archive to the repository root first."
+            echo "Repository currently contains workflow configuration only."
+            exit 1
+          fi
       - name: Extract source archive
         run: unzip -q studygram-source.zip
       - name: Set up Java 17
