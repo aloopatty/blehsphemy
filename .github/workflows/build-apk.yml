@@ -127,7 +127,7 @@ jobs:
 
       - name: Test
         working-directory: studygram
-        run: flutter test
+        run: timeout 180s flutter test --reporter expanded
 
       - name: Build release APK
         working-directory: studygram
