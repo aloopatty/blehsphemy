@@ -100,7 +100,7 @@ class _StoryViewerState extends State<StoryViewer>{
       const SizedBox(height:8),
     ]))));
   }
-  Widget _progress()=>Row(children:List.generate(widget.stories.length,(i)=>Expanded(child:Container(height:2.5,margin:const EdgeInsets.symmetric(horizontal:2),decoration:BoxDecoration(color:i<=index?Colors.white:Colors.white24,borderRadius:BorderRadius.circular(4)))));
+  Widget _progress(){\n    final segments=List<Widget>.generate(widget.stories.length,(i){return Expanded(child:Container(height:2.5,margin:const EdgeInsets.symmetric(horizontal:2),decoration:BoxDecoration(color:i<=index?Colors.white:Colors.white24,borderRadius:BorderRadius.circular(4))));});\n    return Row(children:segments);\n  }
   Widget _header(_Story story)=>Row(children:[CircleAvatar(radius:15,backgroundColor:widget.tint.withValues(alpha:.2),child:Icon(Icons.menu_book,color:widget.tint,size:15)),const SizedBox(width:8),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(storyTopicLabel(story.text),style:const TextStyle(fontWeight:FontWeight.bold)),Text(story.source,maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(color:Colors.white54,fontSize:10))])),IconButton(onPressed:()=>Navigator.pop(context),icon:const Icon(Icons.close))]);
   Widget _storyCard(_Story story){
     return Hero(tag:'story-'+story.post.id+'-'+index.toString(),child:Glass(radius:26,padding:const EdgeInsets.all(24),child:SingleChildScrollView(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
