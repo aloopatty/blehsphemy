@@ -56,7 +56,7 @@ jobs:
           profile.write_text(profile_source)
 
           main = Path("studygram/lib/main.dart")
-          main_source = main.read_text().replace("import 'core/theme/app_theme.dart';\\n", "")
+          main_source = main_source.replace("import 'core/theme/app_theme.dart';" + chr(10), "")
           main.write_text(main_source)
           PY
       - name: Set up Java 17
