@@ -103,7 +103,7 @@ jobs:
 
       - name: Generate Android platform scaffold
         working-directory: studygram
-        run: flutter create --platforms=android --project-name studygram .
+        run: flutter create --platforms=android --project-name studygram --no-pub .
 
       - name: Flutter dependencies
         working-directory: studygram
