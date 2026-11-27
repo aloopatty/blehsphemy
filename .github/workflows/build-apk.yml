@@ -13,102 +13,43 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Verify source archive
-        run: |
-          if [ ! -f studygram-source.zip ]; then
-            echo "::error::Missing studygram-source.zip. Upload the source archive to the repository root first."
-            exit 1
-          fi
-      - name: Extract source archive
+        run: test -s studygram-source.zip
+
+      - name: Extract source
         run: unzip -q studygram-source.zip
-      - name: Repair source archive issues
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          import re
 
-          feed = Path("studygram/lib/features/feed/feed_screen.dart")
-          source = feed.read_text()
-          # The archive accidentally contains a literal backslash-n between imports.
-          source = re.sub(r";\\+nimport", ";" + chr(10) + "import", source, count=1)
-          feed.write_text(source)
-
-          test = Path("studygram/test/parser_test.dart")
-          source = test.read_text()
-          # Convert double-escaped Dart newline sequences to normal Dart escapes.
-          source = source.replace("\\\\n", "\\n")
-          lines = source.splitlines()
-          for index, line in enumerate(lines):
-              if "archive.addFile(ArchiveFile('ppt/slides/slide1.xml'" in line:
-                  xml = '<p:sld xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:t>Slide title</a:t><a:t>Bullet point</a:t></p:sld>'
-                  lines[index] = "      final xmlBytes = utf8.encode('" + xml + "');"
-                  lines.insert(index + 1, "      archive.addFile(ArchiveFile('ppt/slides/slide1.xml', xmlBytes.length, xmlBytes));")
-                  break
-          else:
-              raise SystemExit("Expected PPTX ArchiveFile test fixture was not found.")
-          test.write_text(chr(10).join(lines) + chr(10))
-
-          # Remove imports that are unused in the supplied archive.
-          profile = Path("studygram/lib/features/profile/profile_screen.dart")
-          profile_source = profile.read_text()
-          profile_source = profile_source.replace("import '../feed/models.dart';"+ chr(10), "")
-          profile_source = profile_source.replace("import '../feed/feed_screen.dart';"+ chr(10), "")
-          profile.write_text(profile_source)
-
-          main = Path("studygram/lib/main.dart")
-          main_source = main.read_text().replace("import 'core/theme/app_theme.dart';" + chr(10), "")
-          main.write_text(main_source)
-
-          # Fix remaining deprecated Flutter color APIs in the source archive.
-          theme = Path("studygram/lib/core/theme/app_theme.dart")
-          theme_source = theme.read_text().replace("      background: background,", "      surface: background,")
-          theme.write_text(theme_source)
-
-          switcher = Path("studygram/lib/features/accounts/account_switcher.dart")
-          switcher_source = switcher.read_text().replace(
-              "Colors.primaries[ref.read(subjectsProvider).length%Colors.primaries.length].value",
-              "Colors.primaries[ref.read(subjectsProvider).length%Colors.primaries.length].toARGB32()",
-          )
-          switcher.write_text(switcher_source)
-
-          # Search for and fail if deprecated Color APIs remain in lib/test.
-          deprecated = []
-          for root in (Path("studygram/lib"), Path("studygram/test")):
-              for path in root.rglob("*.dart"):
-                  text = path.read_text()
-                  if "withOpacity(" in text or any(("Colors" in line or "Color(" in line) and ".value" in line for line in text.splitlines()):
-                      deprecated.append(str(path))
-          if deprecated:
-              raise SystemExit("Deprecated color APIs found: " + ", ".join(deprecated))
-          PY
-      - name: Set up Java 17
-        uses: actions/setup-java@v4
+      - uses: actions/setup-java@v4
         with:
-          distribution: temurin
+          distribution: 'temurin'
           java-version: '17'
-      - name: Set up Flutter stable
-        uses: subosito/flutter-action@v2
+
+      - uses: subosito/flutter-action@v2
         with:
-          channel: stable
+          channel: 'stable'
           cache: true
-      - name: Migrate Material imports for Flutter 3.50+
+
+      - name: Generate Android platform scaffold
         working-directory: studygram
-        run: |
-          flutter pub add material_ui
-          dart fix --apply --code=migrate_design_widgets
-          dart fix --apply
+        run: flutter create --platforms=android --project-name studygram .
+
       - name: Flutter dependencies
         working-directory: studygram
         run: flutter pub get
+
       - name: Analyze
         working-directory: studygram
         run: flutter analyze
+
       - name: Test
         working-directory: studygram
         run: flutter test
+
       - name: Build release APK
         working-directory: studygram
         run: flutter build apk --release
+
       - name: Upload release APK
         uses: actions/upload-artifact@v4
         with:
