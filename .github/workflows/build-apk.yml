@@ -20,47 +20,73 @@ jobs:
       - name: Extract source
         run: unzip -q studygram-source.zip
 
-      - name: Apply known source corrections
+      - name: Apply source fixes and compatibility imports
+        working-directory: studygram
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          import re
 
-          def patch(path, transform, expected):
-              p = Path(path)
-              source = p.read_text()
-              updated = transform(source)
-              if updated == source and not expected(source):
-                  raise SystemExit(f"Expected correction pattern missing in {path}")
-              p.write_text(updated)
+          # Repair the archive's malformed literal newline between the first imports.
+          feed = Path("lib/features/feed/feed_screen.dart")
+          feed.write_text(feed.read_text().replace(";\\\\nimport", ";" + chr(10) + "import"))
 
-          feed = Path("studygram/lib/features/feed/feed_screen.dart")
-          s = feed.read_text()
-          s = re.sub(r";\\\\nimport", ";" + chr(10) + "import", s)
-          feed.write_text(s)
+          # Correct the PPTX test fixture's ArchiveFile constructor.
+          test = Path("test/parser_test.dart")
+          lines = test.read_text().splitlines()
+          for i, line in enumerate(lines):
+              if "archive.addFile(ArchiveFile('ppt/slides/slide1.xml'" in line:
+                  xml = "<p:sld xmlns:p='http://schemas.openxmlformats.org/presentationml/2006/main' xmlns:a='http://schemas.openxmlformats.org/drawingml/2006/main'><a:t>Slide title</a:t><a:t>Bullet point</a:t></p:sld>"
+                  lines[i:i+1] = [
+                      '      final xmlBytes = utf8.encode("' + xml + '");',
+                      "      archive.addFile(ArchiveFile('ppt/slides/slide1.xml', xmlBytes.length, xmlBytes));",
+                  ]
+                  break
+          else:
+              raise SystemExit("PPTX test fixture pattern was not found")
+          test.write_text(chr(10).join(lines) + chr(10))
 
-          test = Path("studygram/test/parser_test.dart")
-          s = test.read_text().replace("\\\\n", "\\n")
-          s = s.replace("archive.addFile(ArchiveFile('ppt/slides/slide1.xml', xmlBytes));", "archive.addFile(ArchiveFile('ppt/slides/slide1.xml', xmlBytes.length, xmlBytes));")
-          test.write_text(s)
+          # Remove deprecated duplicate ColorScheme.background while retaining surface.
+          theme = Path("lib/core/theme/app_theme.dart")
+          theme.write_text(theme.read_text().replace("      background: background," + chr(10), ""))
 
-          theme = Path("studygram/lib/core/theme/app_theme.dart")
-          s = theme.read_text()
-          s = s.replace("      background: background,\\n", "")
-          theme.write_text(s)
+          switcher = Path("lib/features/accounts/account_switcher.dart")
+          switcher.write_text(switcher.read_text().replace(".length].value);", ".length].toARGB32());"))
 
-          switcher = Path("studygram/lib/features/accounts/account_switcher.dart")
-          s = switcher.read_text().replace(".length].value);", ".length].toARGB32());")
-          switcher.write_text(s)
+          profile = Path("lib/features/profile/profile_screen.dart")
+          profile.write_text(profile.read_text().replace("import '../feed/models.dart';" + chr(10), "").replace("import '../feed/feed_screen.dart';" + chr(10), ""))
+          main = Path("lib/main.dart")
+          main.write_text(main.read_text().replace("import 'core/theme/app_theme.dart';" + chr(10), ""))
 
-          profile = Path("studygram/lib/features/profile/profile_screen.dart")
-          s = profile.read_text().replace("import '../feed/models.dart';\\n", "").replace("import '../feed/feed_screen.dart';\\n", "")
-          profile.write_text(s)
+          # Flutter 3.50+ moved Material widgets to the standalone package.
+          for root in (Path("lib"), Path("test")):
+              for dart_file in root.rglob("*.dart"):
+                  text = dart_file.read_text().replace("package:flutter/material.dart", "package:material_ui/material_ui.dart")
+                  dart_file.write_text(text)
 
-          main = Path("studygram/lib/main.dart")
-          s = main.read_text().replace("import 'core/theme/app_theme.dart';\\n", "")
-          main.write_text(s)
+          # Replace flutter create's placeholder test with an app smoke test.
+          Path("test/widget_test.dart").write_text("""import 'dart:io';
+          import 'package:flutter_test/flutter_test.dart';
+          import 'package:hive/hive.dart';
+          import 'package:studygram/core/storage/study_store.dart';
+          import 'package:studygram/features/app/studygram_app.dart';
+          import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+          void main() {
+            TestWidgetsFlutterBinding.ensureInitialized();
+            testWidgets('StudyGram root renders', (tester) async {
+              final dir = await Directory.systemTemp.createTemp('studygram-test-');
+              Hive.init(dir.path);
+              await StudyStore.initialize();
+              await tester.pumpWidget(const ProviderScope(child: StudyGramApp()));
+              await tester.pump();
+              expect(find.text('StudyGram'), findsWidgets);
+              await Hive.close();
+              await dir.delete(recursive: true);
+            });
+          }
+          """)
           PY
+        run: flutter pub add material_ui
 
       - uses: actions/setup-java@v4
         with:
