@@ -17,6 +17,6 @@ Future<void> _addSubject(BuildContext context,WidgetRef ref) async {
   final controller=TextEditingController();
   final name=await showDialog<String>(context:context,builder:(ctx)=>AlertDialog(title:const Text('New subject account'),content:TextField(controller:controller,autofocus:true,decoration:const InputDecoration(hintText:'Subject name')),actions:[TextButton(onPressed:()=>Navigator.pop(ctx),child:const Text('Cancel')),FilledButton(onPressed:()=>Navigator.pop(ctx,controller.text.trim()),child:const Text('Create'))]));
   if(name==null||name.isEmpty)return;
-  final s=Subject(id:StudyStore.newId(),name:name,handle:'@${name.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'),'_')}',bio:'Your personal $name study feed',tint:Colors.primaries[ref.read(subjectsProvider).length%Colors.primaries.length].value);
+  final s=Subject(id:StudyStore.newId(),name:name,handle:'@${name.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'),'_')}',bio:'Your personal $name study feed',tint:Colors.primaries[ref.read(subjectsProvider).length%Colors.primaries.length].toARGB32());
   await StudyStore.saveSubject(s);ref.read(subjectsProvider.notifier).state=StudyStore.allSubjects;ref.read(activeSubjectProvider.notifier).state=s.id;
 }
