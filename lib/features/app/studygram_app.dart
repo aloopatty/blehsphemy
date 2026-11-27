@@ -14,10 +14,11 @@ final postsProvider = StateProvider<List<StudyPost>>((ref)=>StudyStore.allPosts)
 final lightModeProvider = StateProvider<bool>((ref)=>false);
 
 class StudyGramApp extends ConsumerWidget {
-  const StudyGramApp({super.key});
+  const StudyGramApp({super.key, this.home});
+  final Widget? home;
   @override Widget build(BuildContext context,WidgetRef ref) {
     final light=ref.watch(lightModeProvider);
-    return MaterialApp(debugShowCheckedModeBanner:false,title:'StudyGram',theme:light?AppTheme.light():AppTheme.dark(),home:const MainShell());
+    return MaterialApp(debugShowCheckedModeBanner:false,title:'StudyGram',theme:light?AppTheme.light():AppTheme.dark(),home:home??const MainShell());
   }
 }
 class MainShell extends ConsumerStatefulWidget { const MainShell({super.key}); @override ConsumerState<MainShell> createState()=>_MainShellState(); }
