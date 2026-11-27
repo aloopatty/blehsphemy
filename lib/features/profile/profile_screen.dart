@@ -39,7 +39,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
    Row(children:[Container(padding:const EdgeInsets.all(3),decoration:BoxDecoration(shape:BoxShape.circle,gradient:LinearGradient(colors:[tint,Colors.pinkAccent])),child:CircleAvatar(radius:38,backgroundColor:const Color(0xFF10121B),child:Icon(Icons.menu_book,color:tint,size:30))),const SizedBox(width:14),Expanded(child:Row(mainAxisAlignment:MainAxisAlignment.spaceAround,children:[_stat('Files',files),_stat('Posts',posts.length),_stat('Mastered',mastered)]))]),
    const SizedBox(height:10),Text(subject.name,style:const TextStyle(fontSize:21,fontWeight:FontWeight.bold)),Text(subject.handle,style:const TextStyle(color:Colors.white54)),Text(subject.bio,style:const TextStyle(fontSize:12)),
    const SizedBox(height:10),Row(children:[Expanded(child:OutlinedButton(onPressed:()=>showAccounts(context,ref),child:const Text('Switch account'))),const SizedBox(width:8),Expanded(child:OutlinedButton(onPressed:()=>showAccounts(context,ref),child:const Text('Edit subject')))]),
-  ]);
+  ]));
  }
  Widget _highlights(Color tint)=>Padding(padding:const EdgeInsets.fromLTRB(16,15,16,9),child:Row(children:[_highlight(Icons.functions,'Formulas',tint),_highlight(Icons.quiz_outlined,'Exam Qs',tint),_highlight(Icons.bookmark,'Saved',tint)]));
  Widget _tabBar()=>Row(children:[_tab(Icons.grid_on,0),_tab(Icons.bolt,1),_tab(Icons.bookmark_border,2)]);
