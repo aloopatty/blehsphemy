@@ -37,7 +37,8 @@ jobs:
 
           # Correct the PPTX test fixture's ArchiveFile constructor.
           test = Path("test/parser_test.dart")
-          lines = test.read_text().splitlines()
+          test_source = test.read_text().replace(chr(92) * 2 + "n", chr(92) + "n")
+          lines = test_source.splitlines()
           for i, line in enumerate(lines):
               if "archive.addFile(ArchiveFile('ppt/slides/slide1.xml'" in line:
                   xml = "<p:sld xmlns:p='http://schemas.openxmlformats.org/presentationml/2006/main' xmlns:a='http://schemas.openxmlformats.org/drawingml/2006/main'><a:t>Slide title</a:t><a:t>Bullet point</a:t></p:sld>"
@@ -92,6 +93,7 @@ jobs:
               await tester.pumpWidget(const ProviderScope(child: StudyGramApp()));
               await tester.pump();
               expect(find.byType(StudyGramApp), findsOneWidget);
+              await tester.pumpWidget(const SizedBox.shrink());
               await Hive.close();
               await dir.delete(recursive: true);
             });
