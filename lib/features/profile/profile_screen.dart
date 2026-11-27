@@ -4,9 +4,6 @@ import '../../core/widgets/glass.dart';
 import '../../core/storage/study_store.dart';
 import '../app/studygram_app.dart';
 import '../accounts/account_switcher.dart';
-import '../feed/models.dart';
-import '../stories/story_viewer.dart';
-import '../feed/feed_screen.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {const ProfileScreen({super.key});@override ConsumerState<ProfileScreen> createState()=>_ProfileScreenState();}
 class _ProfileScreenState extends ConsumerState<ProfileScreen>{int section=0;
